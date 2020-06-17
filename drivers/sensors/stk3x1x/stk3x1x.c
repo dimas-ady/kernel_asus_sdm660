@@ -836,7 +836,7 @@ static int stk3x1x_otp_read_byte_data(struct i2c_client *client, unsigned char c
 	if(err < 0)
 		return err;
 	value = err;
-	printk("%s:read OTP 0x%x=0x%x", __func__, command, value);
+	pr_debug("%s:read OTP 0x%x=0x%x", __func__, command, value);
 
 	err = stk3x1x_i2c_smbus_write_byte_data(client, 0x0, 0x0);
 	if (err < 0)
@@ -869,7 +869,7 @@ static int32_t stk3x1x_check_pid(struct stk3x1x_data *ps_data)
 		return err;
 	value[2] = err;
 
-	printk(KERN_INFO "%s: PID=0x%x, RID=0x%x, 0x90=0x%x\n", __func__, value[0], value[1], value[2]);
+	pr_debug(KERN_INFO "%s: PID=0x%x, RID=0x%x, 0x90=0x%x\n", __func__, value[0], value[1], value[2]);
 	ps_data->pid = value[0];
 
 	if(value[0] == STK3311WV_PID)
@@ -896,17 +896,17 @@ static int32_t stk3x1x_check_pid(struct stk3x1x_data *ps_data)
 	otp25 = err;
 	if(otp25 & 0x80)
 		ps_data->p_wv_r_bd_with_co |= 0b001;
-	printk(KERN_INFO "%s: p_wv_r_bd_with_co = 0x%x\n", __func__, ps_data->p_wv_r_bd_with_co);
+	pr_debug(KERN_INFO "%s: p_wv_r_bd_with_co = 0x%x\n", __func__, ps_data->p_wv_r_bd_with_co);
 
 	if(otp25 & 0x40)
 		ps_data->p_1x_r_bd_with_co |= 0b001;
-	printk(KERN_INFO "%s: p_1x_r_bd_with_co = 0x%x\n", __func__, ps_data->p_1x_r_bd_with_co);
+	pr_debug(KERN_INFO "%s: p_1x_r_bd_with_co = 0x%x\n", __func__, ps_data->p_1x_r_bd_with_co);
 
-	printk(KERN_INFO "%s: p_19_r_bc = 0x%x\n", __func__, ps_data->p_19_r_bc);
+	pr_debug(KERN_INFO "%s: p_19_r_bc = 0x%x\n", __func__, ps_data->p_19_r_bc);
 
 	if(value[0] == 0)
 	{
-		printk(KERN_ERR "PID=0x0, please make sure the chip is stk3x1x!\n");
+		pr_debug(KERN_ERR "PID=0x0, please make sure the chip is stk3x1x!\n");
 		return -2;
 	}
 
@@ -1386,7 +1386,7 @@ static int32_t stk3x1x_enable_ps(struct stk3x1x_data *ps_data, uint8_t enable, u
 		{
 			reading = stk3x1x_get_ps_reading(ps_data);
 			stk_ps_report(ps_data, 1);
-			printk(KERN_INFO "%s: force report ps input event=1, ps code = %d\n",__func__, reading);
+			pr_debug(KERN_INFO "%s: force report ps input event=1, ps code = %d\n",__func__, reading);
 		}
 		else
 #endif /* #ifdef STK_CHK_REG */
@@ -1404,7 +1404,7 @@ static int32_t stk3x1x_enable_ps(struct stk3x1x_data *ps_data, uint8_t enable, u
 			near_far_state = ret & STK_FLG_NF_MASK;
 #endif
 			stk_ps_report(ps_data, near_far_state);
-			printk(KERN_INFO "%s: ps input event=%d, ps=%d\n",__func__, near_far_state, reading);
+			pr_debug(KERN_INFO "%s: ps input event=%d, ps=%d\n",__func__, near_far_state, reading);
 		}
 #ifdef STK_POLL_PS
 		hrtimer_start(&ps_data->ps_timer, ps_data->ps_poll_delay, HRTIMER_MODE_REL);
@@ -2560,7 +2560,7 @@ static ssize_t stk_ps_distance_show(struct device *dev, struct device_attribute 
 	dist = (ret & STK_FLG_NF_MASK)?1:0;
 #endif
 	stk_ps_report(ps_data, dist);
-	printk(KERN_INFO "%s: ps input event=%d\n",__func__, dist);
+	pr_debug(KERN_INFO "%s: ps input event=%d\n",__func__, dist);
     return scnprintf(buf, PAGE_SIZE, "%d\n", dist);
 }
 
@@ -2577,7 +2577,7 @@ static ssize_t stk_ps_distance_store(struct device *dev, struct device_attribute
 		return ret;
 	}
 	stk_ps_report(ps_data, value);
-	printk(KERN_INFO "%s: ps input event=%d\n",__func__, (int)value);
+	pr_debug(KERN_INFO "%s: ps input event=%d\n",__func__, (int)value);
 
 	return size;
 }
@@ -3267,7 +3267,7 @@ static int stk_ps_tune_zero_func_fae(struct stk3x1x_data *ps_data)
 							ps_data->ps_high_thd_boot = word_data + ps_data->stk_ht_n_ct + STK_H_LT;
 							ps_data->ps_low_thd_boot = word_data + ps_data->stk_lt_n_ct + STK_H_LT;
 							ps_data->boot_cali = 1;
-							printk(KERN_INFO "%s: update boot HT=%d, LT=%d\n", __func__, ps_data->ps_high_thd_boot, ps_data->ps_low_thd_boot);
+							pr_debug(KERN_INFO "%s: update boot HT=%d, LT=%d\n", __func__, ps_data->ps_high_thd_boot, ps_data->ps_low_thd_boot);
 						}
 					}
 				}
@@ -3307,12 +3307,12 @@ static int stk_ps_tune_zero_func_fae(struct stk3x1x_data *ps_data)
 		if(word_data > ps_data->psa)
 		{
 			ps_data->psa = word_data;
-			printk(KERN_INFO "%s: update psa: psa=%d,psi=%d\n", __func__, ps_data->psa, ps_data->psi);
+			pr_debug(KERN_INFO "%s: update psa: psa=%d,psi=%d\n", __func__, ps_data->psa, ps_data->psi);
 		}
 		if(word_data < ps_data->psi)
 		{
 			ps_data->psi = word_data;
-			printk(KERN_INFO "%s: update psi: psa=%d,psi=%d\n", __func__, ps_data->psa, ps_data->psi);
+			pr_debug(KERN_INFO "%s: update psi: psa=%d,psi=%d\n", __func__, ps_data->psa, ps_data->psi);
 		}
 		/*Huaqin modify for psensor near/far threshold by chenyijun5 at 2018/02/27 start*/
 		ret = stk3x1x_get_offset(ps_data, word_data);
@@ -3328,7 +3328,7 @@ static int stk_ps_tune_zero_func_fae(struct stk3x1x_data *ps_data)
 		{
 		//	ps_data->ps_thd_h = ps_data->ps_thd_h;
 		//	ps_data->ps_thd_l = ps_data->ps_thd_l;
-			printk(KERN_INFO "%s: no update thd, HT=%d, LT=%d\n", __func__, ps_data->ps_thd_h, ps_data->ps_thd_l);
+			pr_debug(KERN_INFO "%s: no update thd, HT=%d, LT=%d\n", __func__, ps_data->ps_thd_h, ps_data->ps_thd_l);
 		}
 		else
 		{
@@ -3348,14 +3348,14 @@ static int stk_ps_tune_zero_func_fae(struct stk3x1x_data *ps_data)
 		{
 			ps_data->ps_high_thd_boot = ps_data->ps_thd_h;
 			ps_data->ps_low_thd_boot = ps_data->ps_thd_l;
-			printk(KERN_INFO "%s: update boot HT=%d, LT=%d\n", __func__, ps_data->ps_high_thd_boot, ps_data->ps_low_thd_boot);
+			pr_debug(KERN_INFO "%s: update boot HT=%d, LT=%d\n", __func__, ps_data->ps_high_thd_boot, ps_data->ps_low_thd_boot);
 		}
 #endif
 /*Huaqin modify for psensor near/far threshold by chenyijun5 at 2018/02/11 end*/
 		stk3x1x_set_ps_thd_h(ps_data, ps_data->ps_thd_h);
 		stk3x1x_set_ps_thd_l(ps_data, ps_data->ps_thd_l);
 
-		printk("%s: FAE tune0 psa-psi(%d) > STK_DIFF found\n", __func__, diff);
+		pr_debug("%s: FAE tune0 psa-psi(%d) > STK_DIFF found\n", __func__, diff);
 #endif
 		hrtimer_cancel(&ps_data->ps_tune0_timer);
 	}
@@ -3659,7 +3659,7 @@ static void stk_ps_poll_work_func(struct work_struct *work)
 		if(ps_data->ps_distance_last != near_far_state)
 		{
 			stk_ps_report(ps_data, near_far_state);
-			printk(KERN_INFO "%s: ps input event=%d, ps=%d\n",__func__, near_far_state, reading);
+			pr_debug(KERN_INFO "%s: ps input event=%d, ps=%d\n",__func__, near_far_state, reading);
 		}
 	}
 }
@@ -3685,7 +3685,7 @@ static int stk_tune1_ps_int_handle(struct stk3x1x_data *ps_data, uint32_t ps_rea
 	{
 	case STK_PSINT_NORM:
 		stk_ps_report(ps_data, nf_state);
-		printk(KERN_INFO "%s: ps input event=%d, ps code=%d\n",__func__, nf_state, ps_reading);
+		pr_debug(KERN_INFO "%s: ps input event=%d, ps code=%d\n",__func__, nf_state, ps_reading);
 		if(nf_state)
 		{
 			stk3x1x_set_ps_thd_h(ps_data, ps_data->ps_thd_h);
@@ -3705,7 +3705,7 @@ static int stk_tune1_ps_int_handle(struct stk3x1x_data *ps_data, uint32_t ps_rea
 		if(nf_state)
 		{
 			stk_ps_report(ps_data, nf_state);
-			printk(KERN_INFO "%s: ps input event=%d, ps=%d\n",__func__, nf_state, ps_reading);
+			pr_debug(KERN_INFO "%s: ps input event=%d, ps=%d\n",__func__, nf_state, ps_reading);
 			stk3x1x_set_ps_thd_h(ps_data, ps_data->ps_thd_h);
 			stk3x1x_set_ps_thd_l(ps_data, 0);
 			ps_data->stk_int_handle_state = STK_PSINT_NORM;
@@ -3725,7 +3725,7 @@ static int stk_tune1_ps_int_handle(struct stk3x1x_data *ps_data, uint32_t ps_rea
 		if(!nf_state)
 		{
 			stk_ps_report(ps_data, nf_state);
-			printk(KERN_INFO "%s: ps input event=%d, ps=%d\n",__func__, nf_state, ps_reading);
+			pr_debug(KERN_INFO "%s: ps input event=%d, ps=%d\n",__func__, nf_state, ps_reading);
 			stk3x1x_set_ps_thd_h(ps_data, STK_FIN_THD);
 			stk3x1x_set_ps_thd_l(ps_data, ps_data->ps_thd_l);
 			ps_data->stk_int_handle_state = STK_PSINT_FIN_DET;
@@ -3776,7 +3776,7 @@ static void stk_ps_int_handle_int_mode_2_3(struct stk3x1x_data *ps_data)
 #endif
 	reading = stk3x1x_get_ps_reading(ps_data);
 	stk_ps_report(ps_data, near_far_state);
-	printk(KERN_INFO "%s: ps input event=%d, ps code=%d\n",__func__, near_far_state, reading);
+	pr_debug(KERN_INFO "%s: ps input event=%d, ps code=%d\n",__func__, near_far_state, reading);
 }
 #endif
 
@@ -3793,7 +3793,7 @@ static void stk_ps_int_handle(struct stk3x1x_data *ps_data, uint32_t ps_reading,
 	else
 		ps_status_flag = 0;
 	stk_ps_report(ps_data, nf_state);
-	printk(KERN_INFO "%s: ps input event=%d, ps code=%d\n",__func__, nf_state, ps_reading);
+	pr_debug(KERN_INFO "%s: ps input event=%d, ps code=%d\n",__func__, nf_state, ps_reading);
 }
 /* Huaqin add ZQL1650-1072 by zhuqiang at 2018/04/23 end*/
 
