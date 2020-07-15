@@ -179,35 +179,7 @@
 	};
 };
 /*Huaqin add sar sensors sx9310 by chenyijun5 at 2018/02/07 end*/
-&i2c_4 {
-		status = "okay";
-		focaltech@38{
-		compatible = "focaltech,fts";
-		reg = <0x38>;
-		interrupt-parent = <&tlmm>;
-		interrupts = <67 0x2>;
-		vdd-supply = <&pm660l_l3>;
-		vcc_i2c-supply = <&pm660_l11>;
-		/* pins used by touchscreen */
-		pinctrl-names = "pmx_ts_active",
-		                "pmx_ts_suspend";
-		pinctrl-0 = <&ts_active>;
-		pinctrl-1 = <&ts_int_suspend &ts_reset_suspend>;
-		focaltech,name = "ft8716";
-		focaltech,family-id = <0x06>;
-		focaltech,reset-gpio = <&tlmm 66 0x0>;
-		focaltech,irq-gpio = <&tlmm 67 0x2002>;
-		focaltech,max-touch-number = <10>;
-		focaltech,reset-low-time = <100>;
-		focaltech,display-coords =  <0 0 1080 2246>;
-		focaltech,panel-coords = <0 0 1080 2246>;
-		focaltech,have-key = <0>;
-		focaltech,key-number = <3>;
-		focaltech,keys = <158 102 139>;
-		focaltech,key-y-coord = <2030>;
-		focaltech,key-x-coords = <160 360 570>;
-               };
-};
+
 /* Huaqin modify for ZQL1650-141 by chenyijun5 at 2018/02/01 start */
 &i2c_7 {        /* for P/L Sensor */
 	status = "okay";
