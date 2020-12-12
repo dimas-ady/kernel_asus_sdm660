@@ -46,7 +46,7 @@
 #include <linux/file.h>
 #include <linux/kthread.h>
 #include <linux/dma-buf.h>
-#ifdef CONFIG_MACH_ASUS_X01BD
+#ifdef CONFIG_MACH_ASUS_SDM660
 #include <linux/wakelock.h>
 #endif
 #include <sync.h>
@@ -85,9 +85,13 @@
  */
 #define MDP_TIME_PERIOD_CALC_FPS_US	1000000
 
-#ifdef CONFIG_MACH_ASUS_X01BD
+#ifdef CONFIG_MACH_ASUS_SDM660
 #ifdef CONFIG_FOCALTECH_FP
 extern int focal_detect_flag;
+#endif
+
+#ifdef CONFIG_MACH_ASUS_X00TD
+static struct wake_lock early_unblank_wakelock;
 #endif
 extern bool lcd_suspend_flag;
 static void asus_lcd_early_unblank_func(struct work_struct *);
@@ -120,7 +124,7 @@ static int mdss_fb_pan_display(struct fb_var_screeninfo *var,
 static int mdss_fb_check_var(struct fb_var_screeninfo *var,
 			     struct fb_info *info);
 static int mdss_fb_set_par(struct fb_info *info);
-#ifdef CONFIG_MACH_ASUS_X01BD
+#ifdef CONFIG_MACH_ASUS_SDM660
 static int mdss_fb_blank(int blank_mode, struct fb_info *info);
 #endif
 static int mdss_fb_blank_sub(int blank_mode, struct fb_info *info,
@@ -991,7 +995,7 @@ static void mdss_fb_remove_sysfs(struct msm_fb_data_type *mfd)
 	sysfs_remove_group(&mfd->fbi->dev->kobj, &mdss_fb_attr_group);
 }
 
-#ifdef CONFIG_MACH_ASUS_SDM660
+#ifdef CONFIG_MACH_ASUS_X01BD
 bool shutdown_flag = 0;
 #endif
 
@@ -1001,7 +1005,7 @@ static void mdss_fb_shutdown(struct platform_device *pdev)
 
 	mfd->shutdown_pending = true;
 
-#ifdef CONFIG_MACH_ASUS_SDM660
+#ifdef CONFIG_MACH_ASUS_X01BD
 	shutdown_flag = 1;
 #endif
 	/* wake up threads waiting on idle or kickoff queues */
@@ -1637,7 +1641,7 @@ static int mdss_fb_resume(struct platform_device *pdev)
 #endif
 
 #ifdef CONFIG_PM_SLEEP
-#ifdef CONFIG_MACH_ASUS_X01BD
+#ifdef CONFIG_MACH_ASUS_SDM660
 static void asus_lcd_early_unblank_func(struct work_struct *work)
 {
 	struct delayed_work *dw = to_delayed_work(work);
@@ -1665,14 +1669,14 @@ static int mdss_fb_pm_suspend(struct device *dev)
 {
 	struct msm_fb_data_type *mfd = dev_get_drvdata(dev);
 	int rc = 0;
-#ifdef CONFIG_MACH_ASUS_X01BD
+#ifdef CONFIG_MACH_ASUS_SDM660
 	struct fb_info *fbi;
 #endif
 
 	if (!mfd)
 		return -ENODEV;
 
-#ifdef CONFIG_MACH_ASUS_X01BD
+#ifdef CONFIG_MACH_ASUS_SDM660
 	fbi = mfd->fbi;
 	if (!fbi)
 		return -ENODEV;
@@ -1713,7 +1717,7 @@ static int mdss_fb_pm_suspend(struct device *dev)
 static int mdss_fb_pm_resume(struct device *dev)
 {
 	struct msm_fb_data_type *mfd = dev_get_drvdata(dev);
-#ifdef CONFIG_MACH_ASUS_X01BD
+#ifdef CONFIG_MACH_ASUS_SDM660
 	int rc = 0;
 #endif
 	if (!mfd)
@@ -1733,8 +1737,20 @@ static int mdss_fb_pm_resume(struct device *dev)
 	if (mfd->mdp.footswitch_ctrl)
 		mfd->mdp.footswitch_ctrl(true);
 
-#ifdef CONFIG_MACH_ASUS_X01BD
+#ifdef CONFIG_MACH_ASUS_SDM660
 	rc = mdss_fb_resume_sub(mfd);
+
+#ifdef CONFIG_MACH_ASUS_X00TD
+		if (g_resume_from_fp && mfd->index == 0) {
+			if (!mfd->early_unblank_work_queued) {
+				pr_err("[Display] doing unblank from resume, due to fp.\n");
+				mfd->early_unblank_work_queued = true;
+                queue_delayed_work(asus_lcd_early_unblank_wq, &mfd->early_unblank_work, 0);
+			} else {
+				pr_err("[Display] mfd->early_unblank_work_queued returns true.\n");
+		}
+	}
+#endif
 
 #ifdef CONFIG_FOCALTECH_FP
 	if (focal_detect_flag == 0) {
@@ -5326,7 +5342,7 @@ int __init mdss_fb_init(void)
 	if (platform_driver_register(&mdss_fb_driver))
 		return rc;
 
-#ifdef CONFIG_MACH_ASUS_X01BD
+#ifdef CONFIG_MACH_ASUS_SDM660
 	asus_lcd_early_unblank_wq = create_singlethread_workqueue("display_early_wq");
 	wake_lock_init(&early_unblank_wakelock, WAKE_LOCK_SUSPEND,
 			"early_unblank-update");
