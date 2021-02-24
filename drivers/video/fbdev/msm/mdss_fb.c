@@ -51,6 +51,7 @@
 #endif
 #include <sync.h>
 #include <sw_sync.h>
+#include <linux/devfreq_boost.h>
 
 #include "mdss_fb.h"
 #include "mdss_mdp_splash_logo.h"
