@@ -294,10 +294,6 @@ static void msm_restart_prepare(const char *cmd)
 				(cmd != NULL && cmd[0] != '\0'));
 	}
 
-#ifdef CONFIG_QCOM_PRESERVE_MEM
-	need_warm_reset = true;
-#endif
-
 	/* Perform a regular reboot upon panic or unspecified command */
 	if (in_panic || !cmd) {
 		__raw_writel(0x77665501, restart_reason);
